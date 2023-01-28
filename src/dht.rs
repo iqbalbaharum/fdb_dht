@@ -6,6 +6,7 @@ use marine_rs_sdk::marine;
 pub struct FdbDht {
     pub public_key: String,
     pub cid: String,
+    pub token_metadata_cid: String,
     pub key: String,
 }
 
@@ -54,6 +55,7 @@ impl From<Result<FdbDht>> for DhtGetResult {
                 data: FdbDht {
                     public_key: "".to_string(),
                     cid: "".to_string(),
+                    token_metadata_cid: "".to_string(),
                     key: "".to_string(),
                 },
             },
