@@ -13,8 +13,8 @@ pub fn get_none_error() -> Error {
 pub struct Record {
     pub uuid: i64,
     pub key: String,
+    pub name: String,
     pub cid: String,
-    pub token_metadata_cid: String,
     pub public_key: String,
     pub err_msg: String,
     pub success: bool,
@@ -25,8 +25,8 @@ impl Record {
         let row_record = Record {
             uuid: row[0].as_integer().ok_or(get_none_error())?,
             key: row[1].as_string().ok_or(get_none_error())?.to_string(),
-            cid: row[2].as_string().ok_or(get_none_error())?.to_string(),
-            token_metadata_cid: row[3].as_string().ok_or(get_none_error())?.to_string(),
+            name: row[2].as_string().ok_or(get_none_error())?.to_string(),
+            cid: row[3].as_string().ok_or(get_none_error())?.to_string(),
             public_key: row[4].as_string().ok_or(get_none_error())?.to_string(),
             err_msg: "".to_string(),
             success: true,

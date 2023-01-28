@@ -43,8 +43,8 @@ pub fn shutdown() -> FdbResult {
 #[marine]
 pub fn insert(
     key: String,
+    name: String,
     cid: String,
-    token_metadata_cid: String,
     public_key: String,
     signature: String,
     message: String,
@@ -61,10 +61,10 @@ pub fn insert(
     match get_record_by_pk_and_key(&conn, key.clone(), public_key.clone()) {
         Ok(value) => {
             if value.is_none() {
-                let res = add_record(&conn, key, public_key, cid, token_metadata_cid);
+                let res = add_record(&conn, key, name, public_key, cid);
                 FdbResult::from_res(res)
             } else {
-                let res = update_record(&conn, public_key, cid, token_metadata_cid);
+                let res = update_record(&conn, key, name, public_key, cid);
                 FdbResult::from_res(res)
             }
         }
@@ -85,8 +85,8 @@ pub fn get_records_by_key(key: String) -> Vec<FdbDht> {
         match record {
             _ => dhts.push(FdbDht {
                 public_key: record.public_key.clone(),
+                name: record.name.clone(),
                 cid: record.cid.clone(),
-                token_metadata_cid: record.token_metadata_cid.clone(),
                 key: record.key.clone(),
             }),
         }
@@ -109,7 +109,7 @@ pub fn get_latest_record_by_pk_and_key(key: String, public_key: String) -> FdbDh
         fdb.public_key = r.public_key.clone();
         fdb.cid = r.cid.clone();
         fdb.key = r.key.clone();
-        fdb.token_metadata_cid = r.token_metadata_cid.clone()
+        fdb.name = r.name.clone()
     }
 
     fdb
@@ -135,8 +135,8 @@ pub fn create_dht_table(conn: &Connection) -> Result<()> {
   create table if not exists dht (
           uuid INTEGER not null primary key AUTOINCREMENT,
           key TEXT not null,
+          name varchar(255) not null,
           cid TEXT not null,
-          token_metadata_cid TEXT not null,
           owner_pk TEXT not null
       );
   ",
@@ -158,18 +158,18 @@ pub fn delete_dht_table(conn: &Connection) -> Result<()> {
 pub fn add_record(
     conn: &Connection,
     key: String,
+    name: String,
     owner_pk: String,
     cid: String,
-    token_metadata_cid: String,
 ) -> Result<()> {
     conn.execute(format!(
-        "insert into dht (key, cid, token_metadata_cid, owner_pk) values ('{}', '{}', '{}', '{}');",
-        key, cid, token_metadata_cid, owner_pk
+        "insert into dht (key, name, cid, owner_pk) values ('{}', '{}', '{}', '{}');",
+        key, name, cid, owner_pk
     ))?;
 
     println!(
-        "insert into dht (key, cid, token_metadata_cid, owner_pk) values ('{}', '{}', '{}', '{}');",
-        key, cid, token_metadata_cid, owner_pk
+        "insert into dht (key, name, cid, owner_pk) values ('{}', '{}', '{}', '{}');",
+        key, name, cid, owner_pk
     );
 
     Ok(())
@@ -188,18 +188,19 @@ pub fn add_record(
 
 pub fn update_record(
     conn: &Connection,
+    key: String,
+    name: String,
     owner_pk: String,
     cid: String,
-    token_metadata_cid: String,
 ) -> Result<()> {
     conn.execute(format!(
         "
-      update dht 
+      update dht
+      set name = '{}'
       set cid = '{}'
-      set token_metadata_cid = '{}'
-      where owner_pk = '{}';
+      where owner_pk = '{}' AND key = '{}';
       ",
-        cid, token_metadata_cid, owner_pk
+        name, cid, owner_pk, key
     ))?;
 
     Ok(())
